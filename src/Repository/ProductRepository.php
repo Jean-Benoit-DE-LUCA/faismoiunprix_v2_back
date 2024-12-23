@@ -43,6 +43,7 @@ class ProductRepository extends ServiceEntityRepository
             product.user_id AS product_user_id,
             product.created_at AS product_created_at,
             product.updated_at AS product_updated_at,
+            product.initial_created_at AS product_initial_created_at,
 
             user.name AS user_offer_name,
             user.firstname AS user_offer_firstname,
@@ -94,7 +95,7 @@ class ProductRepository extends ServiceEntityRepository
 
     /*--- GET ALL PRODUCTS ---*/
 
-    public function getAllProducts() {
+    public function getAllProducts($limit, $offset) {
 
         $conn = $this->getEntityManager()->getConnection();
 
@@ -112,13 +113,40 @@ class ProductRepository extends ServiceEntityRepository
                 product.delivery AS product_delivery,
                 product.user_id AS product_user_id,
                 product.created_at AS product_created_at,
-                product.updated_at AS product_updated_at
+                product.updated_at AS product_updated_at,
+                product.initial_created_at AS product_initial_created_at
                 
-                FROM product';
+                FROM product
+                
+                LIMIT ' . $limit . ' ' .
+                
+                'OFFSET ' . $offset;
 
         $result = $conn->executeQuery($sql);
 
         return $result->fetchAllAssociative();
+    }
+
+
+
+
+
+
+
+    /*--- GET MAX PRODUCTS ---*/
+
+    public function getMaxProducts() {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'SELECT
+                COUNT(*) AS max_length
+                FROM
+                product';
+
+        $result = $conn->executeQuery($sql);
+
+        return $result->fetchAssociative();
     }
 
 
@@ -147,7 +175,8 @@ class ProductRepository extends ServiceEntityRepository
                 product.delivery AS product_delivery,
                 product.user_id AS product_user_id,
                 product.created_at AS product_created_at,
-                product.updated_at AS product_updated_at
+                product.updated_at AS product_updated_at,
+                product.initial_created_at AS product_initial_created_at
                 
                 FROM product
                 
@@ -186,7 +215,8 @@ class ProductRepository extends ServiceEntityRepository
                 product.delivery AS product_delivery,
                 product.user_id AS product_user_id,
                 product.created_at AS product_created_at,
-                product.updated_at AS product_updated_at
+                product.updated_at AS product_updated_at,
+                product.initial_created_at AS product_initial_created_at
 
                 FROM
                 product
@@ -210,6 +240,61 @@ class ProductRepository extends ServiceEntityRepository
 
 
 
+
+
+
+
+
+
+    /*--- GET ALL PRODUCTS BY NAME LIMIT ---*/
+
+    public function getAllProductsByNameLimit($name, $limit, $offset) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'SELECT
+                product.id AS product_id,
+                product.name AS product_name,
+                product.category_id AS product_category_id,
+                product.description AS product_description,
+                product.city AS product_city,
+                product.zip AS product_zip,
+                product.phone AS product_phone,
+                product.email AS product_email,
+                product.latitude AS product_latitude,
+                product.longitude AS product_longitude,
+                product.delivery AS product_delivery,
+                product.user_id AS product_user_id,
+                product.created_at AS product_created_at,
+                product.updated_at AS product_updated_at,
+                product.initial_created_at AS product_initial_created_at
+
+                FROM
+                product
+
+                WHERE name
+
+                LIKE :name
+                
+                LIMIT ' . $limit . ' ' .
+                
+                'OFFSET ' . $offset;
+
+        $result = $conn->executeQuery($sql, [
+            'name' => '%' . $name . '%'
+        ]);
+
+        return $result->fetchAllAssociative();
+    }
+
+
+
+
+
+
+
+
+
     /*--- INSERT PRODUCT ---*/
 
     public function insertProduct($name, $category_id, $description, $created_at, $updated_at, $city, $user_id, $delivery, $latitude, $longitude, $zip, $phone, $email) {
@@ -217,8 +302,8 @@ class ProductRepository extends ServiceEntityRepository
         $conn = $this->getEntityManager()->getConnection();
 
         $sql = 'INSERT
-                INTO product (name, category_id, description, created_at, updated_at, city, user_id, delivery, latitude, longitude, zip, phone, email)
-                VALUES (:name, :category_id, :description, :created_at, :updated_at, :city, :user_id, :delivery, :latitude, :longitude, :zip, :phone, :email)';
+                INTO product (name, category_id, description, created_at, updated_at, city, user_id, delivery, latitude, longitude, zip, phone, email, initial_created_at)
+                VALUES (:name, :category_id, :description, :created_at, :updated_at, :city, :user_id, :delivery, :latitude, :longitude, :zip, :phone, :email, :initial_created_at)';
 
         $result = $conn->executeQuery($sql, [
             'name' => $name,
@@ -233,7 +318,8 @@ class ProductRepository extends ServiceEntityRepository
             'longitude' => $longitude,
             'zip' => $zip,
             'phone' => $phone,
-            'email' => $email
+            'email' => $email,
+            'initial_created_at' => $created_at
         ]);
     }
 
@@ -303,6 +389,7 @@ class ProductRepository extends ServiceEntityRepository
                 product.user_id AS product_user_id,
                 product.created_at AS product_created_at,
                 product.updated_at AS product_updated_at,
+                product.initial_created_at AS product_initial_created_at,
                 
                 (
 
@@ -377,6 +464,7 @@ class ProductRepository extends ServiceEntityRepository
                 product.user_id AS product_user_id,
                 product.created_at AS product_created_at,
                 product.updated_at AS product_updated_at,
+                product.initial_created_at AS product_initial_created_at,
 
                 photo.id AS photo_id,
                 photo.photo_list AS photo_photo_list,
@@ -486,6 +574,82 @@ class ProductRepository extends ServiceEntityRepository
             'product_id' => $product_id
         ]);
     }
+
+
+
+
+
+    /*--- DELETE PRODUCT BY USER_ID ---*/
+
+    public function deleteProductByUserId($user_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM product
+                WHERE user_id = :user_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_id' => $user_id
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // TO TEST //
+
+    /*--- RENEW PRODUCT ---*/
+
+    public function renewProduct($product_id_renew, $product_created_at_renew) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'UPDATE product
+
+                SET
+                
+                    created_at = :product_created_at_renew
+                    
+                WHERE id = :product_id_renew';
+
+        $result = $conn->executeQuery($sql, [
+            'product_created_at_renew' => $product_created_at_renew,
+            'product_id_renew' => $product_id_renew
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 
     //    /**

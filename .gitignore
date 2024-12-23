@@ -28,3 +28,8 @@
 
 /public/uploads/pictures
 /Config.php
+
+/provisional
+/docker-compose.yaml
+/Dockerfile
+/entrypoint.sh

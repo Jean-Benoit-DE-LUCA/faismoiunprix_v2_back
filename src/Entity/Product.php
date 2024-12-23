@@ -50,6 +50,9 @@ class Product
     private ?string $delivery = null;
 
     #[ORM\Column]
+    private ?\DateTimeImmutable $initial_created_at = null;
+
+    #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
@@ -196,6 +199,18 @@ class Product
     public function setDelivery(string $delivery)
     {
         $this->delivery = $delivery;
+
+        return $this;
+    }
+
+    public function getInitialCreatedAt()
+    {
+        return $this->initial_created_at;
+    }
+
+    public function setInitialCreatedAt(\DateTimeImmutable $initial_created_at)
+    {
+        $this->initial_created_at = $initial_created_at;
 
         return $this;
     }

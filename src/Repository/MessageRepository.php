@@ -181,6 +181,27 @@ class MessageRepository extends ServiceEntityRepository
 
 
 
+    /*--- DELETE MESSAGE BY USER_ID ---*/
+
+    public function deleteMessageByUserId($user_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM message
+                WHERE 
+                    user_id = :user_id OR
+                    user_receive_id = :user_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_id' => $user_id
+        ]);
+    }
+
+
+
+
+
 
 
 
@@ -310,6 +331,8 @@ class MessageRepository extends ServiceEntityRepository
 
         return $result->fetchAllAssociative();
     }
+
+
 
     //    /**
     //     * @return Message[] Returns an array of Message objects

@@ -2,7 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\MessageContact;
 use App\Repository\JwtRepository;
+use App\Repository\MessageContactRepository;
+use App\Repository\MessageRepository;
+use App\Repository\OfferRepository;
+use App\Repository\PhotoRepository;
+use App\Repository\ProductRepository;
 use App\Repository\SessionDataRepository;
 use App\Repository\UserRepository;
 
@@ -10,7 +16,7 @@ use App\Security\JwtAuthenticator;
 
 use Config;
 use DateTimeZone;
-
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -501,6 +507,171 @@ class UserController extends AbstractController
             'logged' => false,
             'message' => $message,
             'user' => $user
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*--- DELETE USER ---*/
+
+    #[Route('/api/deleteuser/{user_id}', name: 'delete_user')]
+    public function deleteUser($user_id, Request $request, UserRepository $userRepository, MessageContactRepository $messageContactRepository, MessageRepository $messageRepository, PhotoRepository $photoRepository, OfferRepository $offerRepository, JwtRepository $jwtRepository, SessionDataRepository $sessionDataRepository, ProductRepository $productRepository, EntityManagerInterface $entityManager) {
+
+        
+        // $getOfferRowsRelatedToUserId = $offerRepository->getOfferRowsRelatedToUserId($user_id);
+
+        // return new JsonResponse([
+        //     'test' => $getOfferRowsRelatedToUserId
+        // ]);
+
+        if ($user_id !== 0) {
+
+
+
+
+            if (isset(getallheaders()['Authorization'])) {
+
+
+                $jwtReceived = str_replace('Bearer ', '', getallheaders()['Authorization']);
+
+
+
+
+                try {
+
+                    $jwtResult = JwtAuthenticator::decodeJwt($jwtReceived);
+
+
+
+                    // delete all messages_contact from user //
+
+                    $messageContactRepository->deleteMessageContactByUserSendId($user_id);
+                    $messageContactRepository->deleteMessageContactByUserReceiveId($user_id);
+
+
+
+
+                    // delete all messages from user //
+
+                    $messageRepository->deleteMessageByUserId($user_id);
+
+
+
+                        // get all photos to delete //
+
+                        $getPictures = $photoRepository->getPictureByUserId($user_id);
+
+
+                        $getPicturesArray = [];
+
+
+
+
+                        if (count($getPictures) > 0) {
+
+                            foreach(explode(',', $getPictures[0]['photo_list']) as $key => $value) {
+
+                                $getPicturesArray[$key] = $value;
+                            }
+
+                            $pathPictures = dirname(dirname(dirname(__FILE__))) . '/public/uploads/pictures/';
+
+
+
+
+                            // delete all photos from user //
+
+                            foreach($getPicturesArray as $keyPic => $valuePic) {
+
+                                if (in_array($valuePic, scandir($pathPictures))) {
+
+                                    unlink($pathPictures . $valuePic);
+                                }
+                            }
+
+
+
+                            // delete photos rows in database //
+
+                            foreach($getPictures as $key => $value) {
+
+                                $photoRowToDelete = $photoRepository->find($value['id']);
+
+                                $entityManager->remove($photoRowToDelete);
+
+                                $entityManager->flush();
+                            }
+                        }
+
+
+
+                    // delete all offers from user //
+
+                    $getOfferRowsRelatedToUserId = $offerRepository->getOfferRowsRelatedToUserId($user_id);
+
+                    foreach($getOfferRowsRelatedToUserId as $key => $valueOffer) {
+
+                        $offerRepository->deleteOfferById($valueOffer['id']);
+                    }
+
+
+
+
+                    // delete JWT from user //
+
+                    $jwtRepository->deleteJwt($user_id);
+
+
+
+
+
+                    // delete session_data from user //
+
+                    $sessionDataRepository->deleteDataSession($user_id);
+
+
+
+                    // delete all products from user //
+
+                    $productRepository->deleteProductByUserId($user_id);
+
+
+
+                    // delete user //
+
+                    $userRepository->deleteUser($user_id);
+
+
+
+                    return new JsonResponse([
+                        'flag' => true,
+                        'message' => 'User successfully deleted'
+                    ]);
+                }
+
+
+                catch (\Exception $e) {
+
+                    return new JsonResponse([
+                        'flag' => false,
+                        'message' => 'Expired token'
+                    ]);
+                }
+            }
+        }
+
+        return new JsonResponse([
+            'flag' => false
         ]);
     }
 

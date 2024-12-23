@@ -380,6 +380,76 @@ class OfferRepository extends ServiceEntityRepository
         ]);
     }
 
+
+
+
+
+
+    /*--- DELETE OFFER BY USER_ID ---*/
+
+    public function deleteOfferByUserId($user_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM offer
+                WHERE user_offer = :user_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_id' => $user_id
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+    /*--- DELETE OFFER BY OFFER ID ---*/
+
+    public function deleteOfferById($offer_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM offer
+                WHERE offer.id = :offer_id';
+
+        $result = $conn->executeQuery($sql, [
+            'offer_id' => $offer_id
+        ]);
+    }
+
+
+
+
+
+
+
+
+    /*--- GET OFFER ROWS RELATED TO USER ID ---*/
+
+    public function getOfferRowsRelatedToUserId($user_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'SELECT offer.*
+                FROM offer
+                INNER JOIN product ON product.id = offer.product_id
+                INNER JOIN user ON user.id = product.user_id
+                WHERE user.id = :user_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_id' => $user_id
+        ]);
+
+        return $result->fetchAllAssociative();
+    }
+
     //    /**
     //     * @return Offer[] Returns an array of Offer objects
     //     */

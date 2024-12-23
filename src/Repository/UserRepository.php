@@ -154,6 +154,29 @@ class UserRepository extends ServiceEntityRepository
 
 
 
+
+
+
+
+    /*--- DELETE USER ---*/
+
+    public function deleteUser($user_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM user
+                WHERE id = :user_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_id' => $user_id
+        ]);
+    }
+
+
+
+
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */

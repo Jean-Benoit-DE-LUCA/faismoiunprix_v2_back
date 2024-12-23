@@ -424,6 +424,69 @@ class MessageController extends AbstractController
 
 
 
+    /*--- CHECK ROW ENVELOPE ---*/
+
+    #[Route('/api/checkmessagerowenvelope', name: 'check_message_row_envelope')]
+    public function checkMessageRowEnvelope(
+        Request $request,
+        MessageRepository $messageRepository
+    ) {
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset(getallheaders()['Authorization'])) {
+
+
+            $jwtReceived = str_replace('Bearer ', '', getallheaders()['Authorization']);
+
+
+
+
+            try {
+
+                JwtAuthenticator::decodeJwt($jwtReceived);
+
+                $user_id = $data['userId'];
+
+                $findReceiveMessageByUserId = $messageRepository->findReceiveMessageByUserId($user_id);
+
+
+                // TODO => CHECK MESSAGE message_user_receive_id_read if "false" and message_user_receive_id
+
+                $result = [];
+
+                foreach($findReceiveMessageByUserId as $key => $value) {
+
+                    if ($value['message_user_receive_id_read'] == 'false' && $value['message_user_receive_id'] == $user_id) {
+
+                        $result[] = $value['message_offer_id'];
+                    }
+                }
+
+                return new JsonResponse([
+                    'flag' => true,
+                    'result' => $result
+                ]);
+            }
+
+
+
+
+
+            catch (\Exception $e) {
+
+                return new JsonResponse([
+                    'flag' => false
+                ]);
+            }
+        }
+
+        return new JsonResponse([
+            'flag' => false
+        ]);
+    }
+
+
 
 
 

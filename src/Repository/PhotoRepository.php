@@ -116,6 +116,40 @@ class PhotoRepository extends ServiceEntityRepository
         ]);
     }
 
+
+
+
+
+
+
+
+
+
+
+
+    /*--- GET ALL PHOTOS BY USER_ID ---*/
+
+    public function getPictureByUserId($user_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'SELECT
+                    photo.*
+                FROM 
+                    photo
+                INNER JOIN
+                    product ON product.id = photo.product_id
+                INNER JOIN
+                    user ON user.id = product.user_id
+                WHERE user.id = :user_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_id' => $user_id
+        ]);
+
+        return $result->fetchAllAssociative();
+    }
+
     //    /**
     //     * @return Photo[] Returns an array of Photo objects
     //     */

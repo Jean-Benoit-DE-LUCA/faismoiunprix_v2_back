@@ -353,6 +353,50 @@ class MessageContactRepository extends ServiceEntityRepository
         ]);
     }
 
+
+
+
+
+
+
+
+
+
+
+    /*--- DELETE MESSAGE_CONTACT BY USER_SEND_ID ---*/
+
+    public function deleteMessageContactByUserSendId($user_send_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM message_contact
+                WHERE user_send_id = :user_send_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_send_id' => $user_send_id
+        ]);
+    }
+
+
+
+
+
+    /*--- DELETE MESSAGE_CONTACT BY USER_RECEIVE_ID ---*/
+
+    public function deleteMessageContactByUserReceiveId($user_receive_id) {
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = 'DELETE
+                FROM message_contact
+                WHERE user_receive_id = :user_receive_id';
+
+        $result = $conn->executeQuery($sql, [
+            'user_receive_id' => $user_receive_id
+        ]);
+    }
+
     //    /**
     //     * @return MessageContact[] Returns an array of MessageContact objects
     //     */

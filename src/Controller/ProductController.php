@@ -28,6 +28,12 @@ class ProductController extends AbstractController
 
         $search = $request->query->get('search');
 
+            // INFINITE SCROLLING //
+
+                $page = intval($request->query->get('page'));
+
+            // INFINITE SCROLLING //
+
 
         $getAllProducts = null;
         $getAllProductsByName = null;
@@ -40,11 +46,45 @@ class ProductController extends AbstractController
 
         if (strlen($search) == 0) {
 
-            $getAllProducts = $productRepository->getAllProducts();
 
 
+                // INFINITE SCROLLING //
+
+                $productIncrease = 20;
+
+                $getMaxAllProducts = $productRepository->getMaxProducts()['max_length'];
+
+                $productPage = ceil($getMaxAllProducts / $productIncrease);
+
+                // INFINITE SCROLLING //
+
+
+
+
+
+            // INFINITE SCROLLING => ADD PARAMETERS + IF CONDITION //
+
+            if ($page < $productPage) {
+
+                
+                $getAllProducts = $productRepository->getAllProducts($productIncrease, $productIncrease * $page);
+            }
+
+            else {
+
+                return new JsonResponse([
+                    'flag' => false
+                ]);
+            }
+
+            // $getAllProducts = $productRepository->getAllProducts($productIncrease, $productIncrease * $page);
+
+            // INFINITE SCROLLING //
 
             
+
+
+
 
             $count = 0;
 
@@ -129,7 +169,10 @@ class ProductController extends AbstractController
 
 
             return new JsonResponse([
-                'result' => $getResult
+                'result' => $getResult,
+                'max_length' => $getMaxAllProducts,
+                'max_page' => $productPage,
+                'current_page' => $page
             ]);
         }
 
@@ -183,12 +226,59 @@ class ProductController extends AbstractController
 
 
 
+
+
+            // INFINITE SCROLLING //
+
+            $getAllProductsByNameLimit = [];
+
+            $productIncrease = 20;
+
+            $getMaxAllProductsByName = count($getAllProductsByName[0]);
+
+            $productPage = ceil($getMaxAllProductsByName / $productIncrease);
+
+            // INFINITE SCROLLING //
+
+
+
+
+
+
+
+
+            // INFINITE SCROLLING => ADD PARAMETERS + IF CONDITION //
+
+            if ($page < $productPage) {
+
+
+                foreach ($arrayKeywordUser as $value) {
+
+                    array_push($getAllProductsByNameLimit, $productRepository->getAllProductsByNameLimit(preg_replace('/[^a-z0-9]/i', '', $value), $productIncrease, $productIncrease * $page));
+                }
+
+            }
+
+            else {
+
+                return new JsonResponse([
+                    'flag' => false
+                ]);
+            }
+
+            // INFINITE SCROLLING //
+
+
+
+
             ///////////
 
 
             $productIdTemp = [];
 
-            foreach ($getAllProductsByName as $key => $value) {
+            // add Limit for infinite scrolling //
+
+            foreach ($getAllProductsByNameLimit as $key => $value) {
 
                 
 
@@ -1373,6 +1463,229 @@ class ProductController extends AbstractController
         return new JsonResponse([
             'flag' => false,
             'message' => ''
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*--- RENEW PRODUCT ---*/
+
+    #[Route('/api/renewproduct/{product_id_renew}', name: 'renew_product')]
+    public function renewProduct(
+        ProductRepository $productRepository,
+        $product_id_renew
+    ) {
+
+
+
+
+        if (isset(getallheaders()['Authorization'])) {
+
+
+
+            $jwtReceived = str_replace('Bearer ', '', getallheaders()['Authorization']);
+
+
+
+
+            try {
+
+                JwtAuthenticator::decodeJwt($jwtReceived);
+
+
+
+
+
+                /* create current date time */
+
+                $dateTimeZone = new \DateTimeZone('Europe/Paris');
+                $currentDateTime = new \DateTimeImmutable('now', $dateTimeZone);
+
+                $currentDateTimeFormatDataBase = $currentDateTime->format('Y/m/d H:i:s');
+
+                /* ------------------------ */
+
+
+                $created_at = $currentDateTimeFormatDataBase;
+                $updated_at = $currentDateTimeFormatDataBase;
+
+
+
+
+
+
+
+
+                // add 14 days //
+
+                // $addDate = new \DateTimeImmutable($currentDateTimeFormatDataBase);
+                // $addDate = $addDate->modify('+14 days');
+
+                // $addDateFormat = $addDate->format('Y/m/d H:i:s');
+
+                //
+
+
+
+
+
+
+
+                // update database product created_at //
+
+                $renewProduct = $productRepository->renewProduct($product_id_renew, $currentDateTimeFormatDataBase);
+
+                //
+
+
+
+
+
+                return new JsonResponse([
+                    'flag' => true,
+                    'product_id_renew' => $product_id_renew
+                ]);
+
+            }
+
+
+
+
+
+            catch (\Exception $e) {
+
+                return new JsonResponse([
+                    'flag' => false,
+                    'message' => 'Expired token'
+                ]);
+            }
+        }
+
+        return new JsonResponse([
+            'product_id_renew' => $product_id_renew
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*--- RANDOM PRODUCT ---*/
+
+    #[Route('/api/randomproduct', name: 'random_product')]
+    public function randomProduct(ProductRepository $productRepository, OfferRepository $offerRepository, PhotoRepository $photoRepository) {
+
+        $getMaxProducts = null;
+
+        $result = null;
+
+        $finalResult = null;
+
+
+
+        if ($productRepository->getMaxProducts()['max_length'] > 0) {
+
+            $getMaxProducts = $productRepository->getMaxProducts()['max_length'];
+        }
+
+
+
+
+
+        if (!is_null($getMaxProducts)) {
+
+            $getAllProducts = $productRepository->getAllProducts($productRepository->getMaxProducts()['max_length'], 0);
+
+            $result = $getAllProducts[rand(0, $productRepository->getMaxProducts()['max_length'] - 1)];
+
+
+
+
+            $count = 0;
+
+            $product = [];
+
+            foreach ($result as $k => $v) {
+
+
+                /* insert product */
+
+
+    
+                if ($k == 'product_city' || $k == 'product_name' || $k == 'product_description' || $k == 'product_email') {
+
+                    $product[$k] = htmlspecialchars_decode($v);
+                }
+
+                else {
+
+                    $product[$k] = $v;
+                }
+
+                
+
+                $finalResult[$count]['product'] = $product;
+
+    
+
+
+
+
+
+                if ($k == 'product_id') {
+
+                    /* insert offer array */
+
+                    $offer = [];
+
+                    $finalResult[$count]['offer'] = $offerRepository->getOfferByProductId($v);
+
+
+
+
+
+                    /* insert photo */
+
+                    $photo = [];
+
+                    $finalResult[$count]['photo'] = $photoRepository->getPictureByProductId($v)[0];
+                }
+
+
+            }
+        }
+
+
+
+        return new JsonResponse([
+            'result' => $finalResult
         ]);
     }
 }
