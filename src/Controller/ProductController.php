@@ -189,7 +189,8 @@ class ProductController extends AbstractController
 
             foreach (str_split($search) as $key => $value) {
 
-                if ($value == ' ' && str_split($search)[$key + 1] == ' ') {
+                if (($value == ' ' && 
+                    ($key + 1 < count(str_split($search)) && (str_split($search)[$key + 1] == ' ')))) {
 
                     continue;
                 }

@@ -451,7 +451,6 @@ class MessageController extends AbstractController
                 $findReceiveMessageByUserId = $messageRepository->findReceiveMessageByUserId($user_id);
 
 
-                // TODO => CHECK MESSAGE message_user_receive_id_read if "false" and message_user_receive_id
 
                 $result = [];
 
