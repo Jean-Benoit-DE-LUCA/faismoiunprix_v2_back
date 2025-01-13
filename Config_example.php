@@ -5,6 +5,7 @@ class Config {
 
     private static $key_openssl_encrypt = '';
     private static $key_geocode_maps = '';
+    private static $email_contact = '';
 
     public static function getKeyOpensslEncrypt() {
 
@@ -32,5 +33,22 @@ class Config {
         self::$key_geocode_maps = $key_geocode_maps;
 
         return self::$key_geocode_maps;
+    }
+
+
+
+
+
+
+    public static function getEmailContact() {
+
+        return self::$email_contact;
+    }
+
+    public static function setEmailContact($email_contact) {
+
+        self::$email_contact = $email_contact;
+
+        return self::$email_contact;
     }
 }
