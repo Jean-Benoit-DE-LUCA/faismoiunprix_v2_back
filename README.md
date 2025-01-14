@@ -1,4 +1,4 @@
-### --How to initialize frontend project-- ###
+### --How to initialize backend project-- ###
 
 1- Clone the project
 
